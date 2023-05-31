@@ -165,6 +165,8 @@ RISCVTTIImpl::getRegisterBitWidth(TargetTransformInfo::RegisterKind K) const {
   case TargetTransformInfo::RGK_Scalar:
     return TypeSize::getFixed(ST->getXLen());
   case TargetTransformInfo::RGK_FixedWidthVector:
+    if (ST->hasExtGenerated()) // LLVMGEN: for XCoreV SIMD, Vector Length is XLEN
+        return TypeSize::getFixed(ST->getXLen());
     return TypeSize::getFixed(
         ST->useRVVForFixedLengthVectors() ? LMUL * ST->getRealMinVLen() : 0);
   case TargetTransformInfo::RGK_ScalableVector:
@@ -190,6 +192,10 @@ InstructionCost RISCVTTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
                                              TTI::TargetCostKind CostKind,
                                              int Index, VectorType *SubTp,
                                              ArrayRef<const Value *> Args) {
+  
+  if (ST->hasExtGenerated())
+    return 1; // LLVMGEN: placeholder
+  
   if (isa<ScalableVectorType>(Tp)) {
     std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Tp);
     switch (Kind) {
@@ -529,6 +535,10 @@ InstructionCost RISCVTTIImpl::getCastInstrCost(unsigned Opcode, Type *Dst,
                                                TTI::TargetCostKind CostKind,
                                                const Instruction *I) {
   if (isa<VectorType>(Dst) && isa<VectorType>(Src)) {
+
+    if (ST->hasExtGenerated())
+      return 0; // LLVMGEN: for XCoreV-SIMD, casts are free.
+
     // FIXME: Need to compute legalizing cost for illegal types.
     if (!isTypeLegal(Src) || !isTypeLegal(Dst))
       return BaseT::getCastInstrCost(Opcode, Dst, Src, CCH, CostKind, I);
@@ -720,6 +730,8 @@ InstructionCost RISCVTTIImpl::getMemoryOpCost(unsigned Opcode, Type *Src,
                                               TTI::TargetCostKind CostKind,
                                               TTI::OperandValueInfo OpInfo,
                                               const Instruction *I) {
+  // LLVMGEN-ANNOT: In newer LLVM versions, this also needs to be patched
+  // for XCoreV SIMD to always call BaseT::getMemoryOpCost. Not needed here yet.
   InstructionCost Cost = 0;
   if (Opcode == Instruction::Store && OpInfo.isConstant())
     Cost += getStoreImmCost(Src, OpInfo, CostKind);

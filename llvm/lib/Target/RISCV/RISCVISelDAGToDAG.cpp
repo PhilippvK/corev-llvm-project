@@ -68,6 +68,10 @@ void RISCVDAGToDAGISel::PreprocessISelDAG() {
     SDValue Result;
     switch (N->getOpcode()) {
     case ISD::SPLAT_VECTOR: {
+      
+      // LLVMGEN: Do not custom lower this for XCoreV-SIMD.
+      if (Subtarget->hasExtGenerated()) break;
+
       // Convert integer SPLAT_VECTOR to VMV_V_X_VL and floating-point
       // SPLAT_VECTOR to VFMV_V_F_VL to reduce isel burden.
       MVT VT = N->getSimpleValueType(0);

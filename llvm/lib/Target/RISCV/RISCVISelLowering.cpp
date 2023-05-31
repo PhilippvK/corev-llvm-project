@@ -106,6 +106,13 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
   if (Subtarget.hasStdExtD())
     addRegisterClass(MVT::f64, &RISCV::FPR64RegClass);
 
+  // LLVMGEN: Add register classes for XCoreV-SIMD
+  if (Subtarget.hasExtGenerated())
+  {
+    addRegisterClass(MVT::v4i8, &RISCV::PulpV4RegClass);
+    addRegisterClass(MVT::v2i16, &RISCV::PulpV2RegClass);
+  }
+
   static const MVT::SimpleValueType BoolVecVTs[] = {
       MVT::nxv1i1,  MVT::nxv2i1,  MVT::nxv4i1, MVT::nxv8i1,
       MVT::nxv16i1, MVT::nxv32i1, MVT::nxv64i1};
@@ -212,7 +219,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
 
   if (!Subtarget.hasExtXcvalu())
     setCondCodeAction(ISD::SETULE, XLenVT, Expand);
-  
+
   setCondCodeAction(ISD::SETUGT, XLenVT, Custom);
   setCondCodeAction(ISD::SETUGE, XLenVT, Expand);
 
@@ -446,6 +453,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::INTRINSIC_W_CHAIN, MVT::i1, Custom);
   }
 
+
   if (Subtarget.hasStdExtA()) {
     setMaxAtomicSizeInBitsSupported(Subtarget.getXLen());
     setMinCmpXchgSizeInBits(32);
@@ -457,6 +465,29 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
 
   setBooleanContents(ZeroOrOneBooleanContent);
 
+  if (Subtarget.hasExtGenerated()) {
+    // By default everything must be expanded.
+    for (unsigned Op = 0; Op < ISD::BUILTIN_OP_END; ++Op)
+    {
+      setOperationAction(Op, MVT::v4i8, Expand);
+      setOperationAction(Op, MVT::v2i16, Expand);
+    }
+
+    // Set supported ops to legal (currently none implemented!)
+    // for (auto VT : {MVT::v4i8, MVT::v2i16}) {
+    //   for (auto OP : {ISD::ADD, ISD::SUB, ISD::AND, ISD::OR, ISD::XOR,
+    //     ISD::BITCAST, ISD::VECREDUCE_ADD, ISD::EXTRACT_VECTOR_ELT, ISD::INSERT_VECTOR_ELT,
+    //     ISD::VECTOR_SHUFFLE, ISD::SPLAT_VECTOR})
+    //     setOperationAction(OP, VT, Legal);
+    // }
+
+    // Loads and Stores are handled as GPR
+    for (auto VT : {MVT::v4i8, MVT::v2i16}) {
+      setOperationPromotedToType(ISD::LOAD, VT, MVT::i32);
+      setOperationPromotedToType(ISD::STORE, VT, MVT::i32);
+    }
+
+  }
   if (Subtarget.hasVInstructions()) {
     setBooleanVectorContents(ZeroOrOneBooleanContent);
 
@@ -7707,7 +7738,7 @@ void RISCVTargetLowering::ReplaceNodeResults(SDNode *N,
     Results.push_back(DAG.getNode(ISD::BUILD_PAIR, DL, MVT::i64, EltLo, EltHi));
     break;
   }
-  
+
   case ISD::INTRINSIC_W_CHAIN: {
     switch (N->getConstantOperandVal(1)) {
     default: // don't custom legalize most intrinsics types

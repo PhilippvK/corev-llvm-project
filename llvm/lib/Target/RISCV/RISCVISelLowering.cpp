@@ -469,8 +469,8 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
     // By default everything must be expanded.
     for (unsigned Op = 0; Op < ISD::BUILTIN_OP_END; ++Op)
     {
-      setOperationAction(Op, MVT::v4i8, Expand);
-      setOperationAction(Op, MVT::v2i16, Expand);
+      for (auto VType : MVT::integer_fixedlen_vector_valuetypes())
+        setOperationAction(Op, VType, Expand);
     }
 
     // Set supported ops to legal (currently none implemented!)
@@ -486,6 +486,16 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
       setOperationPromotedToType(ISD::LOAD, VT, MVT::i32);
       setOperationPromotedToType(ISD::STORE, VT, MVT::i32);
     }
+    
+    // All extending loads or truncating stores are unsupported
+    for (auto SupportedVT : {MVT::v4i8, MVT::v2i16})
+      for (auto OtherVT : MVT::integer_fixedlen_vector_valuetypes())
+      {
+        if (SupportedVT == OtherVT)
+          continue;
+        setTruncStoreAction(SupportedVT, OtherVT, Expand);
+        setLoadExtAction({ISD::EXTLOAD, ISD::SEXTLOAD, ISD::ZEXTLOAD}, SupportedVT, OtherVT, Expand);
+      }
 
   }
   if (Subtarget.hasVInstructions()) {

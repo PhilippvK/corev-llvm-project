@@ -116,6 +116,11 @@ bool RISCVExpandCoreVHwlpPseudo::ProcessLoop(MachineLoop *ML,
       if (EndOffset - StartOffset < 8 || EndOffset - InnerHwlpEndOffset < 8) {
         MI = BuildMI(*Latch, MI, MI->getDebugLoc(), TII->get(RISCV::ADDI),
                      RISCV::X0).addReg(RISCV::X0).addImm(0);
+      } else if (EndOffset - StartOffset < 12 || EndOffset - InnerHwlpEndOffset < 12) {
+        MI = BuildMI(*Latch, MI, MI->getDebugLoc(), TII->get(RISCV::ADDI),
+                     RISCV::X0).addReg(RISCV::X0).addImm(0);
+        MI = BuildMI(*Latch, MI, MI->getDebugLoc(), TII->get(RISCV::ADDI),
+                     RISCV::X0).addReg(RISCV::X0).addImm(0);
       } else {
         break;
       }

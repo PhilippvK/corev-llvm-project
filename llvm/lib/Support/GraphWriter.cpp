@@ -33,6 +33,7 @@
 #include <string>
 #include <system_error>
 #include <vector>
+#include <iostream>
 
 using namespace llvm;
 
@@ -190,149 +191,150 @@ static const char *getProgramName(GraphProgram::Name program) {
 bool llvm::DisplayGraph(StringRef FilenameRef, bool wait,
                         GraphProgram::Name program) {
   std::string Filename = std::string(FilenameRef);
+  std::cout << "DisplayGraph" << std::endl;
   std::string ErrMsg;
   std::string ViewerPath;
   GraphSession S;
 
-#ifdef __APPLE__
-  wait &= !*ViewBackground;
-  if (S.TryFindProgram("open", ViewerPath)) {
-    std::vector<StringRef> args;
-    args.push_back(ViewerPath);
-    if (wait)
-      args.push_back("-W");
-    args.push_back(Filename);
-    errs() << "Trying 'open' program... ";
-    if (!ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg))
-      return false;
-  }
-#endif
-  if (S.TryFindProgram("xdg-open", ViewerPath)) {
-    std::vector<StringRef> args;
-    args.push_back(ViewerPath);
-    args.push_back(Filename);
-    errs() << "Trying 'xdg-open' program... ";
-    if (!ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg))
-      return false;
-  }
-
-  // Graphviz
-  if (S.TryFindProgram("Graphviz", ViewerPath)) {
-    std::vector<StringRef> args;
-    args.push_back(ViewerPath);
-    args.push_back(Filename);
-
-    errs() << "Running 'Graphviz' program... ";
-    return ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg);
-  }
-
-  // xdot
-  if (S.TryFindProgram("xdot|xdot.py", ViewerPath)) {
-    std::vector<StringRef> args;
-    args.push_back(ViewerPath);
-    args.push_back(Filename);
-
-    args.push_back("-f");
-    args.push_back(getProgramName(program));
-
-    errs() << "Running 'xdot.py' program... ";
-    return ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg);
-  }
-
-  enum ViewerKind {
-    VK_None,
-    VK_OSXOpen,
-    VK_XDGOpen,
-    VK_Ghostview,
-    VK_CmdStart
-  };
-  ViewerKind Viewer = VK_None;
-#ifdef __APPLE__
-  if (!Viewer && S.TryFindProgram("open", ViewerPath))
-    Viewer = VK_OSXOpen;
-#endif
-  if (!Viewer && S.TryFindProgram("gv", ViewerPath))
-    Viewer = VK_Ghostview;
-  if (!Viewer && S.TryFindProgram("xdg-open", ViewerPath))
-    Viewer = VK_XDGOpen;
-#ifdef _WIN32
-  if (!Viewer && S.TryFindProgram("cmd", ViewerPath)) {
-    Viewer = VK_CmdStart;
-  }
-#endif
-
-  // PostScript or PDF graph generator + PostScript/PDF viewer
-  std::string GeneratorPath;
-  if (Viewer &&
-      (S.TryFindProgram(getProgramName(program), GeneratorPath) ||
-       S.TryFindProgram("dot|fdp|neato|twopi|circo", GeneratorPath))) {
-    std::string OutputFilename =
-        Filename + (Viewer == VK_CmdStart ? ".pdf" : ".ps");
-
-    std::vector<StringRef> args;
-    args.push_back(GeneratorPath);
-    if (Viewer == VK_CmdStart)
-      args.push_back("-Tpdf");
-    else
-      args.push_back("-Tps");
-    args.push_back("-Nfontname=Courier");
-    args.push_back("-Gsize=7.5,10");
-    args.push_back(Filename);
-    args.push_back("-o");
-    args.push_back(OutputFilename);
-
-    errs() << "Running '" << GeneratorPath << "' program... ";
-
-    if (ExecGraphViewer(GeneratorPath, args, Filename, true, ErrMsg))
-      return true;
-
-    // The lifetime of StartArg must include the call of ExecGraphViewer
-    // because the args are passed as vector of char*.
-    std::string StartArg;
-
-    args.clear();
-    args.push_back(ViewerPath);
-    switch (Viewer) {
-    case VK_OSXOpen:
-      args.push_back("-W");
-      args.push_back(OutputFilename);
-      break;
-    case VK_XDGOpen:
-      wait = false;
-      args.push_back(OutputFilename);
-      break;
-    case VK_Ghostview:
-      args.push_back("--spartan");
-      args.push_back(OutputFilename);
-      break;
-    case VK_CmdStart:
-      args.push_back("/S");
-      args.push_back("/C");
-      StartArg =
-          (StringRef("start ") + (wait ? "/WAIT " : "") + OutputFilename).str();
-      args.push_back(StartArg);
-      break;
-    case VK_None:
-      llvm_unreachable("Invalid viewer");
-    }
-
-    ErrMsg.clear();
-    return ExecGraphViewer(ViewerPath, args, OutputFilename, wait, ErrMsg);
-  }
-
-  // dotty
-  if (S.TryFindProgram("dotty", ViewerPath)) {
-    std::vector<StringRef> args;
-    args.push_back(ViewerPath);
-    args.push_back(Filename);
-
-// Dotty spawns another app and doesn't wait until it returns
-#ifdef _WIN32
-    wait = false;
-#endif
-    errs() << "Running 'dotty' program... ";
-    return ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg);
-  }
+//#ifdef __APPLE__
+//  wait &= !*ViewBackground;
+//  if (S.TryFindProgram("open", ViewerPath)) {
+//    std::vector<StringRef> args;
+//    args.push_back(ViewerPath);
+//    if (wait)
+//      args.push_back("-W");
+//    args.push_back(Filename);
+//    errs() << "Trying 'open' program... ";
+//    if (!ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg))
+//      return false;
+//  }
+//#endif
+//  if (S.TryFindProgram("xdg-open", ViewerPath)) {
+//    std::vector<StringRef> args;
+//    args.push_back(ViewerPath);
+//    args.push_back(Filename);
+//    errs() << "Trying 'xdg-open' program... ";
+//    if (!ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg))
+//      return false;
+//  }
+//
+//  // Graphviz
+//  if (S.TryFindProgram("Graphviz", ViewerPath)) {
+//    std::vector<StringRef> args;
+//    args.push_back(ViewerPath);
+//    args.push_back(Filename);
+//
+//    errs() << "Running 'Graphviz' program... ";
+//    return ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg);
+//  }
+//
+//  // xdot
+//  if (S.TryFindProgram("xdot|xdot.py", ViewerPath)) {
+//    std::vector<StringRef> args;
+//    args.push_back(ViewerPath);
+//    args.push_back(Filename);
+//
+//    args.push_back("-f");
+//    args.push_back(getProgramName(program));
+//
+//    errs() << "Running 'xdot.py' program... ";
+//    return ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg);
+//  }
+//
+//  enum ViewerKind {
+//    VK_None,
+//    VK_OSXOpen,
+//    VK_XDGOpen,
+//    VK_Ghostview,
+//    VK_CmdStart
+//  };
+//  ViewerKind Viewer = VK_None;
+//#ifdef __APPLE__
+//  if (!Viewer && S.TryFindProgram("open", ViewerPath))
+//    Viewer = VK_OSXOpen;
+//#endif
+//  if (!Viewer && S.TryFindProgram("gv", ViewerPath))
+//    Viewer = VK_Ghostview;
+//  if (!Viewer && S.TryFindProgram("xdg-open", ViewerPath))
+//    Viewer = VK_XDGOpen;
+//#ifdef _WIN32
+//  if (!Viewer && S.TryFindProgram("cmd", ViewerPath)) {
+//    Viewer = VK_CmdStart;
+//  }
+//#endif
+//
+//  // PostScript or PDF graph generator + PostScript/PDF viewer
+//  std::string GeneratorPath;
+//  if (Viewer &&
+//      (S.TryFindProgram(getProgramName(program), GeneratorPath) ||
+//       S.TryFindProgram("dot|fdp|neato|twopi|circo", GeneratorPath))) {
+//    std::string OutputFilename =
+//        Filename + (Viewer == VK_CmdStart ? ".pdf" : ".ps");
+//
+//    std::vector<StringRef> args;
+//    args.push_back(GeneratorPath);
+//    if (Viewer == VK_CmdStart)
+//      args.push_back("-Tpdf");
+//    else
+//      args.push_back("-Tps");
+//    args.push_back("-Nfontname=Courier");
+//    args.push_back("-Gsize=7.5,10");
+//    args.push_back(Filename);
+//    args.push_back("-o");
+//    args.push_back(OutputFilename);
+//
+//    errs() << "Running '" << GeneratorPath << "' program... ";
+//
+//    if (ExecGraphViewer(GeneratorPath, args, Filename, true, ErrMsg))
+//      return true;
+//
+//    // The lifetime of StartArg must include the call of ExecGraphViewer
+//    // because the args are passed as vector of char*.
+//    std::string StartArg;
+//
+//    args.clear();
+//    args.push_back(ViewerPath);
+//    switch (Viewer) {
+//    case VK_OSXOpen:
+//      args.push_back("-W");
+//      args.push_back(OutputFilename);
+//      break;
+//    case VK_XDGOpen:
+//      wait = false;
+//      args.push_back(OutputFilename);
+//      break;
+//    case VK_Ghostview:
+//      args.push_back("--spartan");
+//      args.push_back(OutputFilename);
+//      break;
+//    case VK_CmdStart:
+//      args.push_back("/S");
+//      args.push_back("/C");
+//      StartArg =
+//          (StringRef("start ") + (wait ? "/WAIT " : "") + OutputFilename).str();
+//      args.push_back(StartArg);
+//      break;
+//    case VK_None:
+//      llvm_unreachable("Invalid viewer");
+//    }
+//
+//    ErrMsg.clear();
+//    return ExecGraphViewer(ViewerPath, args, OutputFilename, wait, ErrMsg);
+//  }
+//
+//  // dotty
+//  if (S.TryFindProgram("dotty", ViewerPath)) {
+//    std::vector<StringRef> args;
+//    args.push_back(ViewerPath);
+//    args.push_back(Filename);
+//
+//// Dotty spawns another app and doesn't wait until it returns
+//#ifdef _WIN32
+//    wait = false;
+//#endif
+//    errs() << "Running 'dotty' program... ";
+//    return ExecGraphViewer(ViewerPath, args, Filename, wait, ErrMsg);
+//  }
 
   errs() << "Error: Couldn't find a usable graph viewer program:\n";
   errs() << S.LogBuffer << "\n";

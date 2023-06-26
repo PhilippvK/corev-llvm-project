@@ -311,6 +311,10 @@ public:
   bool mayRaiseFPException(SDNode *Node) const;
 
   bool isOrEquivalentToAdd(const SDNode *N) const;
+    
+  // LLVMGEN: We need to overwrite this function for
+  // pattern generation.
+  virtual void CodeGenAndEmitDAG();
 
 private:
 
@@ -349,8 +353,6 @@ private:
                         BasicBlock::const_iterator End,
                         bool &HadTailCall);
   void FinishBasicBlock();
-
-  void CodeGenAndEmitDAG();
 
   /// Generate instructions for lowering the incoming arguments of the
   /// given function.

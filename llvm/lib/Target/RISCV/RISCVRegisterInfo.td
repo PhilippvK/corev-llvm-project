@@ -628,3 +628,27 @@ def PulpV4 : RegisterClass<"RISCV", [v4i8], 32, (add
   )> {
     let RegInfos = XLenRI;
 }
+
+let isAllocatable = 0 in
+def PulpV2_32 : RegisterClass<"RISCV", [v2i32], 32, (add
+    (sequence "X%u", 10, 17),
+    (sequence "X%u", 5, 7),
+    (sequence "X%u", 28, 31),
+    (sequence "X%u", 8, 9),
+    (sequence "X%u", 18, 27),
+    (sequence "X%u", 0, 4)
+  )> {
+    let RegInfos = XLenRI;
+}
+
+let isAllocatable = 0 in
+def PulpV4_32 : RegisterClass<"RISCV", [v4i32], 32, (add
+    (sequence "X%u", 10, 17),
+    (sequence "X%u", 5, 7),
+    (sequence "X%u", 28, 31),
+    (sequence "X%u", 8, 9),
+    (sequence "X%u", 18, 27),
+    (sequence "X%u", 0, 4)
+  )> {
+    let RegInfos = XLenRI;
+}

@@ -26,6 +26,7 @@
 #include "llvm/CodeGen/MachineInstrBuilder.h"
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/SelectionDAGNodes.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/DiagnosticInfo.h"
@@ -34,9 +35,11 @@
 #include "llvm/IR/IntrinsicsRISCV.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/KnownBits.h"
+#include "llvm/Support/MachineValueType.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -111,6 +114,9 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
   {
     addRegisterClass(MVT::v4i8, &RISCV::PulpV4RegClass);
     addRegisterClass(MVT::v2i16, &RISCV::PulpV2RegClass);
+
+    //addRegisterClass(MVT::v2i32, &RISCV::PulpV2_32RegClass);
+    //addRegisterClass(MVT::v4i32, &RISCV::PulpV4_32RegClass);
   }
 
   static const MVT::SimpleValueType BoolVecVTs[] = {
@@ -473,20 +479,27 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
         setOperationAction(Op, VType, Expand);
     }
 
-    // Set supported ops to legal (currently none implemented!)
-    // for (auto VT : {MVT::v4i8, MVT::v2i16}) {
-    //   for (auto OP : {ISD::ADD, ISD::SUB, ISD::AND, ISD::OR, ISD::XOR,
-    //     ISD::BITCAST, ISD::VECREDUCE_ADD, ISD::EXTRACT_VECTOR_ELT, ISD::INSERT_VECTOR_ELT,
-    //     ISD::VECTOR_SHUFFLE, ISD::SPLAT_VECTOR})
-    //     setOperationAction(OP, VT, Legal);
-    // }
+    // Set supported ops to legal
+    for (auto VT : {MVT::v4i8, MVT::v2i16}) {
+      for (auto OP : {ISD::ADD, ISD::SUB, ISD::AND, ISD::OR, ISD::XOR, ISD::MUL, // need emulation pattern before we can safely use mul here
+        ISD::BITCAST, ISD::VECREDUCE_ADD, /*ISD::EXTRACT_VECTOR_ELT, ISD::INSERT_VECTOR_ELT,*/ ISD::SPLAT_VECTOR})
+        setOperationAction(OP, VT, Legal);
+    }
+    // Currently not defined for v2i16
+    setOperationAction(ISD::INSERT_VECTOR_ELT, MVT::v2i16, Expand);
+    setOperationAction(ISD::EXTRACT_VECTOR_ELT, MVT::v2i16, Expand);
+
+    // dot-product custom legalization
+    // setOperationAction(ISD::ZERO_EXTEND, MVT::v4i32, Custom);
+    // setOperationAction(ISD::MUL, MVT::v4i32, Custom);
+    // setOperationAction(ISD::VECREDUCE_ADD, MVT::v4i32, Custom);
 
     // Loads and Stores are handled as GPR
     for (auto VT : {MVT::v4i8, MVT::v2i16}) {
       setOperationPromotedToType(ISD::LOAD, VT, MVT::i32);
       setOperationPromotedToType(ISD::STORE, VT, MVT::i32);
     }
-    
+
     // All extending loads or truncating stores are unsupported
     for (auto SupportedVT : {MVT::v4i8, MVT::v2i16})
       for (auto OtherVT : MVT::integer_fixedlen_vector_valuetypes())
@@ -3498,8 +3511,75 @@ static SDValue lowerConstant(SDValue Op, SelectionDAG &DAG,
   return SDValue();
 }
 
+static bool XCV_IsLegalMul (SDValue Op)
+{
+  if (Op->getOpcode() == ISD::MUL && Op.getSimpleValueType() == MVT::v4i32)
+  {
+      auto& A = Op.getOperand(0);
+      auto& B = Op.getOperand(1);
+      if (
+          (A->getOpcode() == ISD::ZERO_EXTEND || A.getOpcode() == ISD::SIGN_EXTEND) &&
+          (A.getOperand(0)->getSimpleValueType(0) == MVT::v4i8) &&
+          (B->getOpcode() == ISD::ZERO_EXTEND || B.getOpcode() == ISD::SIGN_EXTEND) &&
+          (B.getOperand(0)->getSimpleValueType(0) == MVT::v4i8))
+      {
+          return true;
+      }
+  }
+  return false;
+}
+
+static bool XCV_IsLegalVecreduceAdd (SDValue Op)
+{
+  if (Op->getOpcode() == ISD::VECREDUCE_ADD && Op.getOperand(0).getSimpleValueType() == MVT::v4i32)
+  {
+      auto O = Op.getOperand(0);
+      if (O->getOpcode() == ISD::MUL && XCV_IsLegalMul(O))
+          return true;
+      if ((O->getOpcode() == ISD::ZERO_EXTEND || O->getOpcode() == ISD::SIGN_EXTEND) &&
+              O.getOperand(0).getSimpleValueType() == MVT::v4i8)
+          return true;
+  }
+  return false;
+}
+
 SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
                                             SelectionDAG &DAG) const {
+
+  if (Subtarget.hasExtXcvsimd())
+  {
+    switch (Op.getOpcode()) {
+
+    case ISD::ANY_EXTEND:
+    case ISD::SIGN_EXTEND:
+    case ISD::ZERO_EXTEND:
+      if (Op.getNode()->getSimpleValueType(0) == MVT::v4i32)
+      {
+          if (Op->getOperand(0)->getSimpleValueType(0).SimpleTy == MVT::v4i8 && Op.hasOneUse())
+          {
+            auto& User = Op->use_begin().getUse();
+            if (XCV_IsLegalMul(User.get()) || XCV_IsLegalVecreduceAdd(User.get()))
+            return Op;
+          }
+
+        return SDValue();
+      }
+      break;
+
+    case ISD::VECREDUCE_ADD:
+      if (Op->getOperand(0)->getSimpleValueType(0) == MVT::v4i32)
+      {
+        return XCV_IsLegalVecreduceAdd(Op) ? Op : SDValue();
+      }
+      break;
+    case ISD::MUL:
+      if (Op->getSimpleValueType(0) == MVT::v4i32)
+          return XCV_IsLegalMul(Op) ? Op : SDValue();
+      break;
+    default: break;
+    }
+  }
+
   switch (Op.getOpcode()) {
   default:
     report_fatal_error("unimplemented operand");

@@ -1017,7 +1017,9 @@ unsigned RISCVTTIImpl::getMaximumVF(unsigned ElemWidth, unsigned Opcode) const {
   // problem w/ constant materialization which causes SLP to perform majorly
   // unprofitable transformations.
   // TODO: Figure out constant materialization cost modeling and remove.
-  return SLPMaxVF;
+  //return SLPMaxVF;
+  // LLVMGEN: we return anywhere from 1 to 4 depending on element width.
+  return (32 / ElemWidth) ? (32 / ElemWidth) : 1;
 }
 
 TTI::AddressingModeKind

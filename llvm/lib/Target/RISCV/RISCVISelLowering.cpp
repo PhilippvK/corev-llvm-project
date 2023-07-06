@@ -27,6 +27,7 @@
 #include "llvm/CodeGen/MachineJumpTableInfo.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/SelectionDAGNodes.h"
+#include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/DiagnosticInfo.h"
@@ -471,7 +472,8 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
 
   setBooleanContents(ZeroOrOneBooleanContent);
 
-  if (Subtarget.hasExtGenerated()) {
+  if (Subtarget.hasExtXcvsimd()) {
+    setBooleanVectorContents(ZeroOrNegativeOneBooleanContent);
     // By default everything must be expanded.
     for (unsigned Op = 0; Op < ISD::BUILTIN_OP_END; ++Op)
     {
@@ -481,13 +483,22 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
 
     // Set supported ops to legal
     for (auto VT : {MVT::v4i8, MVT::v2i16}) {
-      for (auto OP : {ISD::ADD, ISD::SUB, ISD::AND, ISD::OR, ISD::XOR, ISD::MUL, // need emulation pattern before we can safely use mul here
-        ISD::BITCAST, ISD::VECREDUCE_ADD, /*ISD::EXTRACT_VECTOR_ELT, ISD::INSERT_VECTOR_ELT,*/ ISD::SPLAT_VECTOR})
+      for (auto OP : {ISD::ADD, ISD::SUB, ISD::AND, ISD::OR, ISD::XOR, /*ISD::MUL,*/ // need emulation pattern before we can safely use mul here
+        ISD::SHL, ISD::SRA, ISD::SRL,
+        ISD::BITCAST, ISD::VECREDUCE_ADD, ISD::SPLAT_VECTOR, ISD::SETCC,
+        ISD::VECTOR_SHUFFLE, ISD::INSERT_VECTOR_ELT, ISD::EXTRACT_VECTOR_ELT, ISD::VSELECT, ISD::BUILD_VECTOR,
+        ISD::UNDEF
+        })
         setOperationAction(OP, VT, Legal);
     }
-    // Currently not defined for v2i16
-    setOperationAction(ISD::INSERT_VECTOR_ELT, MVT::v2i16, Expand);
-    setOperationAction(ISD::EXTRACT_VECTOR_ELT, MVT::v2i16, Expand);
+
+    setOperationAction(ISD::SETCC, MVT::v4i1, Promote);
+    setOperationPromotedToType(ISD::SETCC, MVT::v4i1, MVT::v4i8);
+    setOperationAction(ISD::SETCC, MVT::v2i1, Promote);
+    setOperationPromotedToType(ISD::SETCC, MVT::v2i1, MVT::v2i16);
+
+    setOperationPromotedToType(ISD::VSELECT, MVT::v2i1, MVT::v2i16);
+    setOperationPromotedToType(ISD::VSELECT, MVT::v4i1, MVT::v4i8);
 
     // dot-product custom legalization
     // setOperationAction(ISD::ZERO_EXTEND, MVT::v4i32, Custom);

@@ -178,7 +178,7 @@ class CVSIMDALURR<bits<5> funct5, bit F, bit funct1, bits<3> funct3, string opco
     : CVInstSIMDRR<funct5, F, funct1, funct3, OPC_CUSTOM3, (outs GPR:$rd),
               (ins GPR:$rs1, GPR:$rs2), opcodestr, "$rd, $rs1, $rs2">;
 
-let Constraints = "$rd = $rd_wb" in 
+let Constraints = "$rd = $rd_wb" in
 class CVSIMDALURRWb<bits<5> funct5, bit F, bit funct1, bits<3> funct3, string opcodestr>
     : CVInstSIMDRR<funct5, F, funct1, funct3, OPC_CUSTOM3, (outs GPR:$rd_wb),
               (ins GPR:$rd, GPR:$rs1, GPR:$rs2), opcodestr, "$rd, $rs1, $rs2">;
@@ -187,7 +187,7 @@ class CVSIMDALURI<bits<5> funct5, bit F, bits<3> funct3, string opcodestr>
     : CVInstSIMDRI<funct5, F, funct3, OPC_CUSTOM3, (outs GPR:$rd),
               (ins GPR:$rs1, simm6:$imm6), opcodestr, "$rd, $rs1, $imm6">;
 
-let Constraints = "$rd = $rd_wb" in 
+let Constraints = "$rd = $rd_wb" in
 class CVSIMDALURIWb<bits<5> funct5, bit F, bits<3> funct3, string opcodestr>
     : CVInstSIMDRI<funct5, F, funct3, OPC_CUSTOM3, (outs GPR:$rd_wb),
               (ins GPR:$rd, GPR:$rs1, simm6:$imm6), opcodestr, "$rd, $rs1, $imm6">;
@@ -196,7 +196,7 @@ class CVSIMDALURU<bits<5> funct5, bit F, bits<3> funct3, string opcodestr>
     : CVInstSIMDRI<funct5, F, funct3, OPC_CUSTOM3, (outs GPR:$rd),
               (ins GPR:$rs1, cv_uimm6:$imm6), opcodestr, "$rd, $rs1, $imm6">;
 
-let Constraints = "$rd = $rd_wb" in 
+let Constraints = "$rd = $rd_wb" in
 class CVSIMDALURUWb<bits<5> funct5, bit F, bits<3> funct3, string opcodestr>
     : CVInstSIMDRI<funct5, F, funct3, OPC_CUSTOM3, (outs GPR:$rd_wb),
               (ins GPR:$rd, GPR:$rs1, cv_uimm6:$imm6), opcodestr, "$rd, $rs1, $imm6">;
@@ -297,10 +297,10 @@ let Predicates = [HasExtXcvsimd], hasSideEffects = 0, mayLoad = 0, mayStore = 0 
 
   def CV_PACK :      CVSIMDALURR<0b11110, 0, 0, 0b000, "cv.pack">;
   def CV_PACK_H :    CVSIMDALURR<0b11110, 0, 1, 0b000, "cv.pack.h">;
-  
+
   def CV_PACKHI_B : CVSIMDALURRWb<0b11111, 0, 1, 0b001, "cv.packhi.b">;
   def CV_PACKLO_B : CVSIMDALURRWb<0b11111, 0, 0, 0b001, "cv.packlo.b">;
-  
+
   defm CMPEQ : CVSIMDBinarySigned<0b00000, 1, 0, "cmpeq">;
   defm CMPNE :  CVSIMDBinarySigned<0b00001, 1, 0, "cmpne">;
   defm CMPGT :  CVSIMDBinarySigned<0b00010, 1, 0, "cmpgt">;
@@ -317,7 +317,7 @@ let Predicates = [HasExtXcvsimd], hasSideEffects = 0, mayLoad = 0, mayStore = 0 
   def CV_CPLXMUL_R_DIV2 :    CVSIMDALURRWb<0b01010, 1, 0, 0b010, "cv.cplxmul.r.div2">;
   def CV_CPLXMUL_I_DIV2 :    CVSIMDALURRWb<0b01010, 1, 1, 0b010, "cv.cplxmul.i.div2">;
   def CV_CPLXMUL_R_DIV4 :    CVSIMDALURRWb<0b01010, 1, 0, 0b100, "cv.cplxmul.r.div4">;
-  def CV_CPLXMUL_I_DIV4 :    CVSIMDALURRWb<0b01010, 1, 1, 0b100, "cv.cplxmul.i.div4">; 
+  def CV_CPLXMUL_I_DIV4 :    CVSIMDALURRWb<0b01010, 1, 1, 0b100, "cv.cplxmul.i.div4">;
   def CV_CPLXMUL_R_DIV8 :    CVSIMDALURRWb<0b01010, 1, 0, 0b110, "cv.cplxmul.r.div8">;
   def CV_CPLXMUL_I_DIV8 :    CVSIMDALURRWb<0b01010, 1, 1, 0b110, "cv.cplxmul.i.div8">;
 
@@ -327,8 +327,8 @@ let Predicates = [HasExtXcvsimd], hasSideEffects = 0, mayLoad = 0, mayStore = 0 
 
   def CV_SUBROTMJ :    CVSIMDALURR<0b01100, 1, 0, 0b000, "cv.subrotmj">;
   def CV_SUBROTMJ_DIV2 :    CVSIMDALURR<0b01100, 1, 0, 0b010, "cv.subrotmj.div2">;
-  def CV_SUBROTMJ_DIV4 :    CVSIMDALURR<0b01100, 1, 0, 0b100, "cv.subrotmj.div4">; 
-  def CV_SUBROTMJ_DIV8 :    CVSIMDALURR<0b01100, 1, 0, 0b110, "cv.subrotmj.div8">;  
+  def CV_SUBROTMJ_DIV4 :    CVSIMDALURR<0b01100, 1, 0, 0b100, "cv.subrotmj.div4">;
+  def CV_SUBROTMJ_DIV8 :    CVSIMDALURR<0b01100, 1, 0, 0b110, "cv.subrotmj.div8">;
 
   def CV_ADD_DIV2 :    CVSIMDALURR<0b01101, 1, 0, 0b010, "cv.add.div2">;
   def CV_ADD_DIV4 :    CVSIMDALURR<0b01101, 1, 0, 0b100, "cv.add.div4">;
@@ -336,7 +336,7 @@ let Predicates = [HasExtXcvsimd], hasSideEffects = 0, mayLoad = 0, mayStore = 0 
 
   def CV_SUB_DIV2 :    CVSIMDALURR<0b01110, 1, 0, 0b010, "cv.sub.div2">;
   def CV_SUB_DIV4 :    CVSIMDALURR<0b01110, 1, 0, 0b100, "cv.sub.div4">;
-  def CV_SUB_DIV8 :    CVSIMDALURR<0b01110, 1, 0, 0b110, "cv.sub.div8">; 
+  def CV_SUB_DIV8 :    CVSIMDALURR<0b01110, 1, 0, 0b110, "cv.sub.div8">;
 }
 
 let Predicates = [HasExtXcvmac], hasSideEffects = 0, mayLoad = 0, mayStore = 0 in {
@@ -972,19 +972,19 @@ class PatCorevGprGpr <string intr, string asm> :
 
 // Note that rd is the last argument
 class PatCorevGprGprGpr <string intr, string asm> :
-  Pat<(!cast<Intrinsic>("int_riscv_cv_simd_" # intr) GPR:$rs1, GPR:$rs2, GPR:$rd), 
+  Pat<(!cast<Intrinsic>("int_riscv_cv_simd_" # intr) GPR:$rs1, GPR:$rs2, GPR:$rd),
       (!cast<RVInst>("CV_" # asm) GPR:$rd, GPR:$rs1, GPR:$rs2)>;
 
 class PatCorevGprTImm <string intr, string asm> :
-  PatGprImm<!cast<Intrinsic>("int_riscv_cv_simd_" # intr), 
+  PatGprImm<!cast<Intrinsic>("int_riscv_cv_simd_" # intr),
             !cast<RVInst>("CV_" # asm), cv_tsimm6>;
 
 class PatCorevGprImm <string intr, string asm> :
-  PatGprImm<!cast<Intrinsic>("int_riscv_cv_simd_" # intr), 
+  PatGprImm<!cast<Intrinsic>("int_riscv_cv_simd_" # intr),
             !cast<RVInst>("CV_" # asm), simm6>;
 
 class PatCorevGprUImm <string intr, string asm> :
-  PatGprImm<!cast<Intrinsic>("int_riscv_cv_simd_" # intr), 
+  PatGprImm<!cast<Intrinsic>("int_riscv_cv_simd_" # intr),
             !cast<RVInst>("CV_" # asm), cv_uimm6>;
 
 multiclass PatCorevGprGprHB <string intr> {
@@ -1012,15 +1012,15 @@ multiclass PatCorevGprUImmHB <string intr> {
   def : PatCorevGprUImm<intr # "_b", NAME # "_B">;
 }
 
-class PatCorevGprGprDiv <Intrinsic intr, string asm, int div> : 
+class PatCorevGprGprDiv <Intrinsic intr, string asm, int div> :
   Pat<(intr GPR:$rs1, GPR:$rs2, (i32 div)),
       (!cast<RVInst>("CV_" # asm) GPR:$rs1, GPR:$rs2)>;
 
-class PatCorevGprGprGprDiv <Intrinsic intr, string asm, int div> : 
+class PatCorevGprGprGprDiv <Intrinsic intr, string asm, int div> :
   Pat<(intr GPR:$rd, GPR:$rs1, GPR:$rs2, (i32 div)),
       (!cast<RVInst>("CV_" # asm) GPR:$rd, GPR:$rs1, GPR:$rs2)>;
 
-class PatCorevGprShuffle <Intrinsic intr, RVInst inst, int s> : 
+class PatCorevGprShuffle <Intrinsic intr, RVInst inst, int s> :
   Pat<(intr GPR:$rs1, (i32 s)),
       (inst GPR:$rs1, 0)>; // TODO: parse it
 
@@ -1037,7 +1037,7 @@ multiclass PatCorevGprGprGprDivAll <Intrinsic intr> {
 }
 
 class PatCorevGpr <string intr, string asm> :
-  PatGpr<!cast<Intrinsic>("int_riscv_cv_simd_" # intr), 
+  PatGpr<!cast<Intrinsic>("int_riscv_cv_simd_" # intr),
             !cast<RVInst>("CV_" # asm)>;
 
 multiclass PatCorevGprHB <string intr> {
@@ -1108,9 +1108,9 @@ let Predicates = [HasExtXcvsimd, IsRV32] in {
 
   defm EXTRACT :  PatCorevGprTImmHB<"extract">;
   defm EXTRACTU : PatCorevGprTImmHB<"extractu">;
-  def : Pat<(int_riscv_cv_simd_insert_b GPR:$rd, GPR:$rs1, cv_tsimm6:$imm), 
+  def : Pat<(int_riscv_cv_simd_insert_b GPR:$rd, GPR:$rs1, cv_tsimm6:$imm),
             (CV_INSERT_B GPR:$rd, GPR:$rs1, cv_tsimm6:$imm)>;
-  def : Pat<(int_riscv_cv_simd_insert_h GPR:$rd, GPR:$rs1, cv_tsimm6:$imm), 
+  def : Pat<(int_riscv_cv_simd_insert_h GPR:$rd, GPR:$rs1, cv_tsimm6:$imm),
             (CV_INSERT_H GPR:$rd, GPR:$rs1, cv_tsimm6:$imm)>;
 
   defm SHUFFLE : PatCorevGprGprHB<"shuffle">;
@@ -1126,9 +1126,9 @@ let Predicates = [HasExtXcvsimd, IsRV32] in {
 
   def : PatCorevGprGpr<"packhi_h", "PACK_H">;
   def : PatCorevGprGpr<"packlo_h", "PACK">;
-  def : Pat<(int_riscv_cv_simd_packhi_b GPR:$rd, GPR:$rs1, GPR:$rs2), 
+  def : Pat<(int_riscv_cv_simd_packhi_b GPR:$rd, GPR:$rs1, GPR:$rs2),
             (CV_PACKHI_B GPR:$rd, GPR:$rs1, GPR:$rs2)>;
-  def : Pat<(int_riscv_cv_simd_packlo_b GPR:$rd, GPR:$rs1, GPR:$rs2), 
+  def : Pat<(int_riscv_cv_simd_packlo_b GPR:$rd, GPR:$rs1, GPR:$rs2),
             (CV_PACKLO_B GPR:$rd, GPR:$rs1, GPR:$rs2)>;
 
   defm CMPEQ :  PatCorevBinary<"cmpeq">;
@@ -1141,7 +1141,7 @@ let Predicates = [HasExtXcvsimd, IsRV32] in {
   defm CMPGEU : PatCorevBinaryUnsigned<"cmpgeu">;
   defm CMPLTU : PatCorevBinaryUnsigned<"cmpltu">;
   defm CMPLEU : PatCorevBinaryUnsigned<"cmpleu">;
-  
+
   def : PatCorevGprGprGprDiv<int_riscv_cv_simd_cplxmul_r, "CPLXMUL_R", 0>;
   defm CPLXMUL_R : PatCorevGprGprGprDivAll<int_riscv_cv_simd_cplxmul_r>;
   def : PatCorevGprGprGprDiv<int_riscv_cv_simd_cplxmul_i, "CPLXMUL_I", 0>;

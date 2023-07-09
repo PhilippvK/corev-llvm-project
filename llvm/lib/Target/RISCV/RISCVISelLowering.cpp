@@ -486,7 +486,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
       for (auto OP : {ISD::ADD, ISD::SUB, ISD::AND, ISD::OR, ISD::XOR, /*ISD::MUL,*/ // need emulation pattern before we can safely use mul here
         ISD::SHL, ISD::SRA, ISD::SRL,
         ISD::BITCAST, ISD::VECREDUCE_ADD, ISD::SPLAT_VECTOR, ISD::SETCC,
-        ISD::VECTOR_SHUFFLE, ISD::INSERT_VECTOR_ELT, ISD::EXTRACT_VECTOR_ELT, ISD::VSELECT, ISD::BUILD_VECTOR,
+        ISD::VECTOR_SHUFFLE, ISD::INSERT_VECTOR_ELT, ISD::EXTRACT_VECTOR_ELT, ISD::BUILD_VECTOR,
         ISD::UNDEF
         })
         setOperationAction(OP, VT, Legal);
@@ -497,8 +497,8 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::SETCC, MVT::v2i1, Promote);
     setOperationPromotedToType(ISD::SETCC, MVT::v2i1, MVT::v2i16);
 
-    setOperationPromotedToType(ISD::VSELECT, MVT::v2i1, MVT::v2i16);
-    setOperationPromotedToType(ISD::VSELECT, MVT::v4i1, MVT::v4i8);
+    //setOperationPromotedToType(ISD::VSELECT, MVT::v2i1, MVT::v2i16);
+    //setOperationPromotedToType(ISD::VSELECT, MVT::v4i1, MVT::v4i8);
 
     // dot-product custom legalization
     // setOperationAction(ISD::ZERO_EXTEND, MVT::v4i32, Custom);
@@ -3377,6 +3377,9 @@ bool RISCVTargetLowering::isShuffleMaskLegal(ArrayRef<int> M, EVT VT) const {
   // Only support legal VTs for other shuffles for now.
   if (!isTypeLegal(VT))
     return false;
+
+  if (Subtarget.hasExtXcvsimd())
+    return true;
 
   MVT SVT = VT.getSimpleVT();
 

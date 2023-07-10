@@ -487,7 +487,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
         ISD::SHL, ISD::SRA, ISD::SRL,
         ISD::BITCAST, ISD::VECREDUCE_ADD, ISD::SPLAT_VECTOR, ISD::SETCC,
         ISD::VECTOR_SHUFFLE, ISD::INSERT_VECTOR_ELT, ISD::EXTRACT_VECTOR_ELT, ISD::BUILD_VECTOR,
-        ISD::UNDEF
+        ISD::UNDEF, ISD::ABS, ISD::UMAX, ISD::UMIN, ISD::SMAX, ISD::SMIN,
         })
         setOperationAction(OP, VT, Legal);
     }

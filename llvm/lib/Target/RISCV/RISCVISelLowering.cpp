@@ -486,7 +486,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
       for (auto OP : {ISD::ADD, ISD::SUB, ISD::AND, ISD::OR, ISD::XOR, /*ISD::MUL,*/ // need emulation pattern before we can safely use mul here
         ISD::SHL, ISD::SRA, ISD::SRL,
         ISD::BITCAST, ISD::VECREDUCE_ADD, ISD::SPLAT_VECTOR, ISD::SETCC,
-        ISD::VECTOR_SHUFFLE, ISD::INSERT_VECTOR_ELT, ISD::EXTRACT_VECTOR_ELT, ISD::BUILD_VECTOR,
+        ISD::VECTOR_SHUFFLE, ISD::EXTRACT_VECTOR_ELT, ISD::BUILD_VECTOR,
         ISD::UNDEF, ISD::ABS, ISD::UMAX, ISD::UMIN, ISD::SMAX, ISD::SMIN,
         })
         setOperationAction(OP, VT, Legal);
@@ -496,6 +496,10 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
     setOperationPromotedToType(ISD::SETCC, MVT::v4i1, MVT::v4i8);
     setOperationAction(ISD::SETCC, MVT::v2i1, Promote);
     setOperationPromotedToType(ISD::SETCC, MVT::v2i1, MVT::v2i16);
+    
+    // We only support INSERT_VECTOR_ELT with immediate index, thus custom lower
+    setOperationAction(ISD::INSERT_VECTOR_ELT, MVT::v4i8, Custom);
+    setOperationAction(ISD::INSERT_VECTOR_ELT, MVT::v2i16, Custom);
 
     //setOperationPromotedToType(ISD::VSELECT, MVT::v2i1, MVT::v2i16);
     //setOperationPromotedToType(ISD::VSELECT, MVT::v4i1, MVT::v4i8);
@@ -3563,6 +3567,12 @@ SDValue RISCVTargetLowering::LowerOperation(SDValue Op,
   if (Subtarget.hasExtXcvsimd())
   {
     switch (Op.getOpcode()) {
+    
+    case ISD::INSERT_VECTOR_ELT:
+    if (Subtarget.hasExtXcvsimd() &&
+      (Op->getSimpleValueType(0) == MVT::v4i8 || Op->getSimpleValueType(0) == MVT::v2i16))
+      return (Op.getOperand(2)->getOpcode() == ISD::Constant) ? Op : SDValue();
+    break;
 
     case ISD::ANY_EXTEND:
     case ISD::SIGN_EXTEND:
@@ -13183,6 +13193,13 @@ bool RISCVTargetLowering::allowsMisalignedMemoryAccesses(
     if (Fast)
       *Fast = false;
     return Subtarget.enableUnalignedScalarMem();
+  }
+
+  if (Subtarget.hasExtXcvsimd())
+  {
+    if (Fast)
+      *Fast = false;
+    return true;
   }
 
   // All vector implementations must support element alignment

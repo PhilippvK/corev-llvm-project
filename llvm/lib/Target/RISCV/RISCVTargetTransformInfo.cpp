@@ -1006,6 +1006,18 @@ unsigned RISCVTTIImpl::getRegUsageForType(Type *Ty) {
 
     if (ST->useRVVForFixedLengthVectors())
       return divideCeil(Size, ST->getRealMinVLen());
+    
+    if (ST->hasExtXcvsimd())
+    {
+        EVT ETy = getTLI()->getValueType(DL, Ty);
+        // For XCoreV SIMD: v4i8 and v2i16 naturally have a size of 1.
+        // For improved register usage estimation, we also consider v2i32 and v4i32
+        // to have a size of 1. These usually occur temporarily in dot products, but are
+        // never materialized in a register. 
+        // They should thus not inflate the estimated register count excessively.
+        if (ETy == MVT::v4i8 || ETy == MVT::v2i16 || ETy == MVT::v2i32 || ETy == MVT::v4i32)
+            return 1;
+    }
   }
 
   return BaseT::getRegUsageForType(Ty);

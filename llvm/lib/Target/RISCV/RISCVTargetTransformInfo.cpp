@@ -732,9 +732,11 @@ InstructionCost RISCVTTIImpl::getMemoryOpCost(unsigned Opcode, Type *Src,
                                               const Instruction *I) {
   // LLVMGEN-ANNOT: In newer LLVM versions, this also needs to be patched
   // for XCoreV SIMD to always call BaseT::getMemoryOpCost. Not needed here yet.
+
   InstructionCost Cost = 0;
-  if (Opcode == Instruction::Store && OpInfo.isConstant())
-    Cost += getStoreImmCost(Src, OpInfo, CostKind);
+  if (!ST->hasExtXcvsimd())
+    if (Opcode == Instruction::Store && OpInfo.isConstant())
+      Cost += getStoreImmCost(Src, OpInfo, CostKind);
   return Cost + BaseT::getMemoryOpCost(Opcode, Src, Alignment, AddressSpace,
                                        CostKind, OpInfo, I);
 }

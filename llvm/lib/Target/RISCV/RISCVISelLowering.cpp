@@ -13189,18 +13189,19 @@ bool RISCVTargetLowering::isMulAddWithConstProfitable(SDValue AddNode,
 bool RISCVTargetLowering::allowsMisalignedMemoryAccesses(
     EVT VT, unsigned AddrSpace, Align Alignment, MachineMemOperand::Flags Flags,
     bool *Fast) const {
-  if (!VT.isVector()) {
-    if (Fast)
-      *Fast = false;
-    return Subtarget.enableUnalignedScalarMem();
-  }
-
   if (Subtarget.hasExtXcvsimd())
   {
     if (Fast)
       *Fast = false;
     return true;
   }
+
+  if (!VT.isVector()) {
+    if (Fast)
+      *Fast = false;
+    return Subtarget.enableUnalignedScalarMem();
+  }
+
 
   // All vector implementations must support element alignment
   EVT ElemVT = VT.getVectorElementType();

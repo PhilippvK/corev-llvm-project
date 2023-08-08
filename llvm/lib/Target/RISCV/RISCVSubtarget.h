@@ -115,7 +115,7 @@ private:
   unsigned XLen = 32;
   unsigned ZvlLen = 0;
   MVT XLenVT = MVT::i32;
-  uint8_t MaxInterleaveFactor = 16;
+  uint8_t MaxInterleaveFactor = 2;
   RISCVABI::ABI TargetABI = RISCVABI::ABI_Unknown;
   std::bitset<RISCV::NUM_TARGET_REGS> UserReservedRegister;
   RISCVFrameLowering FrameLowering;

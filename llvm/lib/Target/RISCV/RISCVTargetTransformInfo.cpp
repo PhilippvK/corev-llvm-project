@@ -952,9 +952,11 @@ void RISCVTTIImpl::getUnrollingPreferences(Loop *L, ScalarEvolution &SE,
   // Allowing 4 blocks permits if-then-else diamonds in the body.
   if (L->getNumBlocks() > 4)
     return;
-
+  
+  // Xcvsimd: we _do_ want to unroll vectorized loops.
+  // (interleaving is not required as core is in-order)
   // Don't unroll vectorized loops, including the remainder loop
-  if (getBooleanLoopAttribute(L, "llvm.loop.isvectorized"))
+  if (getBooleanLoopAttribute(L, "llvm.loop.isvectorized") && !ST->hasExtXcvsimd())
     return;
 
   // Scan the loop: don't unroll loops with calls as this could prevent
@@ -964,7 +966,7 @@ void RISCVTTIImpl::getUnrollingPreferences(Loop *L, ScalarEvolution &SE,
     for (auto &I : *BB) {
       // Initial setting - Don't unroll loops containing vectorized
       // instructions.
-      if (I.getType()->isVectorTy())
+      if (I.getType()->isVectorTy() && !ST->hasExtXcvsimd())
         return;
 
       if (isa<CallInst>(I) || isa<InvokeInst>(I)) {

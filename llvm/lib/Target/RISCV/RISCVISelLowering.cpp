@@ -440,8 +440,8 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
     setOperationAction(ISD::UMIN, XLenVT, Legal);
     setOperationAction(ISD::SMAX, XLenVT, Legal);
     setOperationAction(ISD::UMAX, XLenVT, Legal);
-    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i8, Legal);
-    setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i16, Legal);
+    //setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i8, Legal);
+    //setOperationAction(ISD::SIGN_EXTEND_INREG, MVT::i16, Legal);
   }
 
   if (Subtarget.hasExtXcvmem()) {

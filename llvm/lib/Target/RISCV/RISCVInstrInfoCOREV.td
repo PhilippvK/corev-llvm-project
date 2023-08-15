@@ -800,6 +800,7 @@ let Predicates = [HasExtXcvmac] in {
 //===----------------------------------------------------------------------===//
 // Patterns for general ALU operations
 //===----------------------------------------------------------------------===//
+<<<<<<< HEAD
 
 class PatCoreVAluGpr <string intr, string asm> :
   PatGpr<!cast<Intrinsic>("int_riscv_cv_alu_" # intr),
@@ -822,6 +823,9 @@ multiclass PatCoreVAluGprGprImm <Intrinsic intr> {
             (!cast<RVInst>("CV_" # NAME # "_PSEUDO") GPR:$rs1, GPR:$rs2, uimm5:$imm)>;
 }
 
+=======
+/*
+>>>>>>> 551e32f6785f... Add generated Xcvalu support
 let Predicates = [HasExtXcvalu] in {
 
   def : Pat<(abs GPR:$rs1), (CV_ABS GPR:$rs1)>;
@@ -905,7 +909,7 @@ let Predicates = [HasExtXcvalu] in {
   defm SUBRN  : PatCoreVAluGprGprImm<int_riscv_cv_alu_subrn>;
   defm SUBURN : PatCoreVAluGprGprImm<int_riscv_cv_alu_suburn>;
 }
-
+*/
 //===----------------------------------------------------------------------===//
 // Patterns for immediate branching operations
 //===----------------------------------------------------------------------===//
@@ -1224,3 +1228,33 @@ def : Pat<(int_set_loop_iterations GPR:$rs1),
 
 def : Pat<(int_set_loop_iterations uimm12:$rs1),
           (HwlpSetupImm uimm12:$rs1)>;
+<<<<<<< HEAD
+=======
+
+// TODO: For using CV_EXTRACTU/CV_INSERT with vectors,
+// we also need to define isCodeGenOnly=1 copies of
+// the instruction definitions.
+// def : Pat<(i32 (vector_extract PulpV4:$rs1, 0)),
+//       (CV_EXTRACTU PulpV4:$rs1, 0, 7)>;
+// def : Pat<(i32 (vector_extract PulpV4:$rs1, 1)),
+//       (CV_EXTRACTU PulpV4:$rs1, 8, 15)>;
+// def : Pat<(i32 (vector_extract PulpV4:$rs1, 2)),
+//       (CV_EXTRACTU PulpV4:$rs1, 16, 23)>;
+// def : Pat<(i32 (vector_extract PulpV4:$rs1, 3)),
+//       (CV_EXTRACTU PulpV4:$rs1, 24, 31)>;
+// 
+// def : Pat<(v4i8 (vector_insert PulpV4:$rd, GPR:$rs1, 0)),
+//       (CV_INSERT PulpV4:$rd, GPR:$rs1, 0, 7)>;
+// def : Pat<(v4i8 (vector_insert PulpV4:$rd, GPR:$rs1, 1)),
+//       (CV_INSERT PulpV4:$rd, GPR:$rs1, 8, 15)>;
+// def : Pat<(v4i8 (vector_insert PulpV4:$rd, GPR:$rs1, 2)),
+//       (CV_INSERT PulpV4:$rd, GPR:$rs1, 16, 23)>;
+// def : Pat<(v4i8 (vector_insert PulpV4:$rd, GPR:$rs1, 3)),
+//       (CV_INSERT PulpV4:$rd, GPR:$rs1, 24, 31)>;
+
+include "XCoreVSIMDInstrFormat.td"
+include "XCoreVSIMD.td"
+include "XCoreVALUInstrFormat.td"
+include "XCoreVALU.td"
+include "XCoreVSIMD_manual.td"
+>>>>>>> 551e32f6785f... Add generated Xcvalu support

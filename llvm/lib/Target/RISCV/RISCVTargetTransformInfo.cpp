@@ -165,7 +165,7 @@ RISCVTTIImpl::getRegisterBitWidth(TargetTransformInfo::RegisterKind K) const {
   case TargetTransformInfo::RGK_Scalar:
     return TypeSize::getFixed(ST->getXLen());
   case TargetTransformInfo::RGK_FixedWidthVector:
-    if (ST->hasExtGenerated()) // LLVMGEN: for XCoreV SIMD, Vector Length is XLEN
+    if (ST->hasExtXcvsimd()) // LLVMGEN: for XCoreV SIMD, Vector Length is XLEN
         return TypeSize::getFixed(ST->getXLen());
     return TypeSize::getFixed(
         ST->useRVVForFixedLengthVectors() ? LMUL * ST->getRealMinVLen() : 0);
@@ -192,10 +192,10 @@ InstructionCost RISCVTTIImpl::getShuffleCost(TTI::ShuffleKind Kind,
                                              TTI::TargetCostKind CostKind,
                                              int Index, VectorType *SubTp,
                                              ArrayRef<const Value *> Args) {
-  
-  if (ST->hasExtGenerated())
+
+  if (ST->hasExtXcvsimd())
     return 1; // LLVMGEN: placeholder
-  
+
   if (isa<ScalableVectorType>(Tp)) {
     std::pair<InstructionCost, MVT> LT = getTypeLegalizationCost(Tp);
     switch (Kind) {
@@ -536,7 +536,7 @@ InstructionCost RISCVTTIImpl::getCastInstrCost(unsigned Opcode, Type *Dst,
                                                const Instruction *I) {
   if (isa<VectorType>(Dst) && isa<VectorType>(Src)) {
 
-    if (ST->hasExtGenerated())
+    if (ST->hasExtXcvsimd())
       return 0; // LLVMGEN: for XCoreV-SIMD, casts are free.
 
     // FIXME: Need to compute legalizing cost for illegal types.

@@ -283,7 +283,7 @@ public:
 
   unsigned getRegisterClassForType(bool Vector, Type *Ty = nullptr) const {
     if (Vector)
-      return ST->hasExtGenerated() ? RISCVRegisterClass::GPRRC : RISCVRegisterClass::VRRC; // LLVMGEN
+      return ST->hasExtXcvsimd() ? RISCVRegisterClass::GPRRC : RISCVRegisterClass::VRRC; // LLVMGEN
     if (!Ty)
       return RISCVRegisterClass::GPRRC;
 

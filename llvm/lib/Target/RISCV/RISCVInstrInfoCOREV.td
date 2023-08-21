@@ -1289,3 +1289,7 @@ let Predicates = [HasExtXcvelw], hasSideEffects = 0, mayLoad = 1, mayStore = 0 i
 //
 // def : Pat<(int_set_loop_iterations uimm12:$rs1),
 //           (HwlpSetupImm uimm12:$rs1)>;
+
+include "XCoreVSIMDInstrFormat.td"
+include "XCoreVSIMD_manual.td"
+include "XCoreVSIMD.td"

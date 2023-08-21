@@ -68,9 +68,9 @@ void RISCVDAGToDAGISel::PreprocessISelDAG() {
     SDValue Result;
     switch (N->getOpcode()) {
     case ISD::SPLAT_VECTOR: {
-      
+
       // LLVMGEN: Do not custom lower this for XCoreV-SIMD.
-      if (Subtarget->hasExtGenerated()) break;
+      if (Subtarget->hasExtXcvsimd()) break;
 
       // Convert integer SPLAT_VECTOR to VMV_V_X_VL and floating-point
       // SPLAT_VECTOR to VFMV_V_F_VL to reduce isel burden.
@@ -1803,6 +1803,10 @@ void RISCVDAGToDAGISel::Select(SDNode *Node) {
     return;
   }
   case ISD::SPLAT_VECTOR:
+    // LLVMGEN: Do not custom lower this for XCoreV-SIMD.
+    if (Subtarget->hasExtXcvsimd())
+      break;
+    LLVM_FALLTHROUGH;
   case RISCVISD::VMV_S_X_VL:
   case RISCVISD::VFMV_S_F_VL:
   case RISCVISD::VMV_V_X_VL:

@@ -111,7 +111,7 @@ RISCVTargetLowering::RISCVTargetLowering(const TargetMachine &TM,
     addRegisterClass(MVT::f64, &RISCV::FPR64RegClass);
 
   // LLVMGEN: Add register classes for XCoreV-SIMD
-  if (Subtarget.hasExtGenerated())
+  if (Subtarget.hasExtXcvsimd())
   {
     addRegisterClass(MVT::v4i8, &RISCV::PulpV4RegClass);
     addRegisterClass(MVT::v2i16, &RISCV::PulpV2RegClass);

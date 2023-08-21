@@ -71,8 +71,8 @@ void initializeRISCVRedundantCopyEliminationPass(PassRegistry &);
 FunctionPass *createRISCVCoreVHwlpBlocksPass();
 void initializeRISCVCoreVHwlpBlocksPass(PassRegistry &);
 
-FunctionPass *createRISCVExpandCoreVHwlpPseudoPass();
-void initializeRISCVExpandCoreVHwlpPseudoPass(PassRegistry &);
+// FunctionPass *createRISCVExpandCoreVHwlpPseudoPass();
+// void initializeRISCVExpandCoreVHwlpPseudoPass(PassRegistry &);
 
 InstructionSelector *createRISCVInstructionSelector(const RISCVTargetMachine &,
                                                     RISCVSubtarget &,
